@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% block title %}Backed projects{% endblock %}
+{% block title %}Search projects{% endblock %}
 
 {% block content %}
 
@@ -22,31 +22,23 @@ body {
 
 <div class="container">
   <div class="solid">
-        <div style="background-color:#1b6d85"> <h2 style="color:white">PARTNERS PROJECTS</h2> </div>
+        <div style="background-color:#1b6d85"> <h2 style="color:white">SEARCH PROJECTS</h2> </div>
   </div>
   <br>
 
-{% if transactions.count > 0 %}
-{% for transaction in transactions%}
-
-
-
+{% for project in projects %}
 <div class="solid">
-  <strong style="color:#1b6d85">Project:</strong> <a href="/partners/project/{{transaction.project.id}}/">{{ transaction.project.projectname }}</a>
+  <strong style="color:#1b6d85">Project:</strong> <a href="/partners/project/{{project.id}}/">{{ project.projectname }}</a>
   <br><br>
-  <strong style="color:#1b6d85">Description:</strong> <br>{{ transaction.project.description |truncatewords:"10"}}...
-  <br><br>
-  <strong style="color:#1b6d85">Ammount:</strong> $ {{ transaction.ammount }}
-
+  <strong style="color:#1b6d85">Description:</strong> <br>{{project.description |truncatewords:"10"}}...
+  {% for transaction in transactions %}
+  {% if transaction.project.projectname == project.projectname %}
+  <p>Project already backed: $ {{transaction.ammount}}</p>
+  {% endif %}
+  {% endfor %}
 </div>
 <br>
 {% endfor %}
-{% else %}
-
-<div class="solid">
-      <div> <h2 style="color:#1b6d85">YOU DON'T HAVE ANY PARTNERS PROJECT</h2> </div>
-</div>
-{% endif %}
 <br>
 <input type="button" onclick=" location.href='/partners/home/' " value="Go Back" name="boton" class="btn btn-danger  btn-sm"/>
 

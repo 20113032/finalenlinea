@@ -5,6 +5,7 @@ from __future__ import unicode_literals
 from django.db import models
 from django.contrib.auth.models import User
 from django.db.models.signals import post_save
+#from partners.index import ProjectIndex
 
 class Project(models.Model):
     user=models.ForeignKey(User, on_delete=models.CASCADE)
@@ -43,3 +44,4 @@ class Transaction(models.Model):
     entreprenuer=models.ForeignKey(User, related_name='%(class)s_entreprenuer')
     project=models.ForeignKey(Project)
     ammount=models.DecimalField(max_digits=12, decimal_places=2)
+    valid=models.CharField(max_length=5)

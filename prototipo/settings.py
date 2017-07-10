@@ -37,8 +37,16 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'posts.apps.PostsConfig',
+    'partners.apps.partnersConfig',
+#    'algoliasearch_django',
+#    'algoliasearch'
 ]
+
+#ALGOLIA = {
+#    'APPLICATION_ID' : "UVK9MS9E2E",
+#    'API_KEY': "0ca9b9e99380aef6f342dbbde91f63be",
+#}
+
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
@@ -56,7 +64,7 @@ TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
         'DIRS': [
-            'posts/templates'
+            'partners/templates'
         ],
         'APP_DIRS': True,
         'OPTIONS': {

@@ -5,7 +5,7 @@ from django.shortcuts import render
 
 # Create your views here.
 #views.py
-from posts.forms import *
+from partners.forms import *
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth import logout
 from django.views.decorators.csrf import csrf_protect
@@ -14,8 +14,10 @@ from django.http import HttpResponseRedirect
 from django.template import RequestContext
 from django.template.loader import get_template
 from django.http import HttpResponse
-from posts.models import Client, Project, Message, Transaction
+from partners.models import Client, Project, Message, Transaction
 from django.contrib.auth.models import User
+#from algoliasearch import algoliasearch
+#from algoliasearch_django import raw_search
 
 @csrf_protect
 def register(request):
@@ -34,7 +36,7 @@ def register(request):
             lastname=form.cleaned_data['lastname'],
             usertype=form.cleaned_data['usertype'],
             )
-            return HttpResponseRedirect('/posts/register/success/')
+            return HttpResponseRedirect('/partners/register/success/')
     else:
         form = RegistrationForm()
     variables = {
@@ -50,12 +52,11 @@ def register_success(request):
 
 def logout_page(request):
     logout(request)
-    return HttpResponseRedirect('/posts/accounts/login/')
+    return HttpResponseRedirect('/partners/login/')
 
 @login_required
 def home(request):
     user=request.user
-    client = Client.objects.get(user=user.id)
     variables={
     'user': request.user,
     'client': Client.objects.get(user=user.id),
@@ -64,6 +65,7 @@ def home(request):
     return HttpResponse(template.render(variables,request))
 
 @csrf_protect
+@login_required
 def create(request):
     user=request.user
     if request.method == 'POST':
@@ -75,7 +77,7 @@ def create(request):
             description=form.cleaned_data['description'],
             value=form.cleaned_data['value'],
             )
-            return HttpResponseRedirect('/posts/create/success/')
+            return HttpResponseRedirect('/partners/create/success/')
     else:
         form = CreateForm()
     variables = {
@@ -84,11 +86,13 @@ def create(request):
     template = get_template('emprendedor/create.html')
     return HttpResponse(template.render(variables, request))
 
+@login_required
 def create_success(request):
     template = get_template('emprendedor/success.html')
     variables = {}
     return HttpResponse(template.render(variables, request))
 
+@login_required
 @csrf_protect
 def show(request):
     user=request.user
@@ -96,22 +100,22 @@ def show(request):
     variables = {'projects':Project.objects.filter(user=user)}
     return HttpResponse(template.render(variables,request))
 
+@login_required
 @csrf_protect
 def backed(request):
     user=request.user
-    transactions = Transaction.objects.filter(backer=user)
     template = get_template('backer/backed.html')
     variables = {
-    'transactions':Transaction.objects.filter(backer=user),
+    'transactions':Transaction.objects.filter(backer=user, valid='truth'),
     }
     return HttpResponse(template.render(variables,request))
 
+@login_required
 @csrf_protect
 def message(request, project_id):
     user=request.user
     project=Project.objects.get(id=project_id)
     userproxy=project.user
-    client = Client.objects.get(user=userproxy)
     if request.method == 'POST':
         recipient=User.objects.get(id=userproxy.id)
         form = MessageForm(request.POST)
@@ -123,7 +127,7 @@ def message(request, project_id):
             title=form.cleaned_data['title'],
             message=form.cleaned_data['message'],
             )
-            return HttpResponseRedirect('/posts/message/success/')
+            return HttpResponseRedirect('/partners/message/success/')
     else:
         form = MessageForm()
     variables={
@@ -134,20 +138,22 @@ def message(request, project_id):
     template = get_template('emprendedor/message.html')
     return HttpResponse(template.render(variables, request))
 
+@login_required
 def message_send(request):
     template = get_template('emprendedor/send.html')
     variables = {}
     return HttpResponse(template.render(variables, request))
 
+@login_required
 def donated(request):
     template = get_template('backer/donated.html')
     variables = {}
     return HttpResponse(template.render(variables, request))
 
 @csrf_protect
+@login_required
 def inbox(request):
     user=request.user
-    client = Client.objects.filter()
     template = get_template('emprendedor/inbox.html')
     variables = {
     'messages':Message.objects.filter(recipient=user),
@@ -156,13 +162,12 @@ def inbox(request):
     return HttpResponse(template.render(variables,request))
 
 @csrf_protect
+@login_required
 def answer(request, message_id):
     user=request.user
     message=Message.objects.get(id=message_id)
     userproxy=message.sender
-    client = Client.objects.get(user=userproxy)
     projectproxy=message.project
-    messageproxy=message.message
     if request.method == 'POST':
         recipient=User.objects.get(id=userproxy.id)
         project=Project.objects.get(id=projectproxy.id)
@@ -175,7 +180,7 @@ def answer(request, message_id):
             title=message.title,
             message=form.cleaned_data['answer'],
             )
-            return HttpResponseRedirect('/posts/message/success/')
+            return HttpResponseRedirect('/partners/message/success/')
     else:
         form = AnswerForm()
     variables={
@@ -187,12 +192,15 @@ def answer(request, message_id):
     return HttpResponse(template.render(variables, request))
 
 @csrf_protect
+@login_required
 def project(request, project_id):
     project = Project.objects.get(id=project_id)
     user=request.user
     userproxy=project.user
-    clientproxy = Client.objects.get(user=userproxy)
-    client = Client.objects.get(user=user)
+    transactions=Transaction.objects.filter(project=project, valid='truth')
+    total=0.00
+    for transaction in transactions:
+        total=total+float(transaction.ammount)
     if request.method == 'POST':
         form = PaymentForm(request.POST)
         if form.is_valid():
@@ -201,15 +209,47 @@ def project(request, project_id):
             entreprenuer=userproxy,
             project=project,
             ammount=form.cleaned_data['ammount'],
+            valid='false'
             )
-            return HttpResponseRedirect('/posts/donated/')
+            ammountproxy=float(form.cleaned_data['ammount'])*float(100)
+            ammountproxy=int(ammountproxy)
+            return HttpResponseRedirect('/partners/payment/'+ str(project.id) + '/' + str(ammountproxy) + '/')
     else:
         form = PaymentForm()
     variables = {
     'form':form,
     'project':Project.objects.get(id=project_id),
     'clientproxy': Client.objects.get(user=userproxy),
-    'client': Client.objects.get(user=user)
+    'client': Client.objects.get(user=user),
+    'total':total,
+    'donations': Transaction.objects.filter(project=project, valid='truth', backer=user)
     }
     template = get_template('emprendedor/project.html')
+    return HttpResponse(template.render(variables,request))
+
+@csrf_protect
+@login_required
+def payment(request, project_id, ammountproxy):
+    project=Project.objects.get(id=project_id)
+    ammount=float(ammountproxy)/float(100)
+    transaction=Transaction.objects.get(project=project, ammount=ammount, valid='false')
+    template=get_template('backer/payment.html')
+    variables={
+    'transaction':Transaction.objects.get(project=project, ammount=ammount, valid='false'),
+    'ammountstripe':ammountproxy
+    }
+    if request.method=='POST':
+        transaction.valid='truth'
+        transaction.save()
+        return HttpResponseRedirect('/partners/donated/')
+    return HttpResponse(template.render(variables,request))
+
+@login_required
+def search(request):
+    user=request.user
+    variables={
+    'projects':Project.objects.filter(),
+    'transactions':Transaction.objects.filter(backer=user)
+    }
+    template=get_template('backer/search.html')
     return HttpResponse(template.render(variables,request))

@@ -3,16 +3,16 @@ import re
 from django import forms
 from django.contrib.auth.models import User
 from django.utils.translation import ugettext_lazy as _
-from posts.models import Project
+from partners.models import Project
 
 class RegistrationForm(forms.Form):
-    firstname = forms.RegexField(regex=r'^\w+$', widget=forms.TextInput(attrs=dict(required=True, max_length=30)), label=_("Name"))
-    lastname = forms.RegexField(regex=r'^\w+$', widget=forms.TextInput(attrs=dict(required=True, max_length=30)), label=_("Last name"))
-    username = forms.RegexField(regex=r'^\w+$', widget=forms.TextInput(attrs=dict(required=True, max_length=30)), label=_("Username"), error_messages={ 'invalid': _("Username can only have letters, numbers and underscores.") })
+    firstname = forms.CharField(widget=forms.TextInput(attrs=dict(required=True, max_length=30)), label=_("Name"))
+    lastname = forms.CharField(widget=forms.TextInput(attrs=dict(required=True, max_length=30)), label=_("Last name"))
+    username = forms.RegexField(regex=r'^\w+$', widget=forms.TextInput(attrs=dict(required=True, max_length=30)), label=_("ID"), error_messages={ 'invalid': _("Username can only have letters, numbers and underscores.") })
     email = forms.EmailField(widget=forms.TextInput(attrs=dict(required=True, max_length=30)), label=_("Email address"))
     password1 = forms.CharField(widget=forms.PasswordInput(attrs=dict(required=True, max_length=30, render_value=False)), label=_("Password"))
     password2 = forms.CharField(widget=forms.PasswordInput(attrs=dict(required=True, max_length=30, render_value=False)), label=_("Password (again)"))
-    CHOICES = [("1", "Backer"), ("2", "Entreprenuer")]
+    CHOICES = [("1", "Investor"), ("2", "Entreprenuer")]
     usertype = forms.ChoiceField(widget=forms.RadioSelect, choices=CHOICES, label=_("User type"))
 
     def clean_username(self):
@@ -35,7 +35,7 @@ class RegistrationForm(forms.Form):
             self.fields['usertype'].choices = types
 
 class CreateForm(forms.Form):
-    projectname = forms.RegexField(regex=r'^\w+$', widget=forms.TextInput(attrs=dict(required=True, max_length=100)), label=_("Project Name"))
+    projectname = forms.CharField(widget=forms.TextInput(attrs=dict(required=True, max_length=100)), label=_("Project Name"))
     description = forms.CharField(widget=forms.Textarea(attrs=dict(required=True, max_length=2000)), label=_("Description"))
     value = forms.DecimalField(widget=forms.NumberInput(attrs=dict(required=True, max_digits=12, max_decimal_places=2)), label=_("Goal in $"))
 
@@ -46,8 +46,8 @@ class CreateForm(forms.Form):
             return self.cleaned_data['projectname']
         raise forms.ValidationError(_("Projectname already exists."))
 
-class MessageForm(forms.Form):
-    title = forms.RegexField(regex=r'^\w+$', widget=forms.TextInput(attrs=dict(required=True, max_length=30)), label=_("Title"))
+class MessageForm(forms.Form) :
+    title = forms.CharField(widget=forms.TextInput(attrs=dict(required=True, max_length=30)), label=_("Subject"))
     message = forms.CharField(widget=forms.Textarea(attrs=dict(required=True, max_length=2000)), label=_("Message"))
 
 class AnswerForm(forms.Form):

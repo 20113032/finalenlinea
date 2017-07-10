@@ -11,7 +11,7 @@ class Migration(migrations.Migration):
 
     dependencies = [
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),
-        ('posts', '0005_auto_20170612_0109'),
+        ('partners', '0005_auto_20170612_0109'),
     ]
 
     operations = [
@@ -22,12 +22,12 @@ class Migration(migrations.Migration):
                 ('ammount', models.DecimalField(decimal_places=2, max_digits=12)),
                 ('backer', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='transaction_backer', to=settings.AUTH_USER_MODEL)),
                 ('entreprenuer', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='transaction_entreprenuer', to=settings.AUTH_USER_MODEL)),
-                ('project', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='posts.Project')),
+                ('project', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='partners.Project')),
             ],
         ),
         migrations.AddField(
             model_name='client',
             name='projects',
-            field=models.ManyToManyField(to='posts.Project'),
+            field=models.ManyToManyField(to='partners.Project'),
         ),
     ]
