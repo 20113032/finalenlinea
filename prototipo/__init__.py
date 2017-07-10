@@ -1,1 +1,1 @@
-default_app_config = 'partners.apps.partnersConfig'
+default_app_config = 'partners.apps.PartnersConfig'
